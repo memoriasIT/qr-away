@@ -1,6 +1,6 @@
 import os
 
-def defryImage(path_to_defry="defry/defry.out", image_to_defry="img/logo.png"):
+def defryImage(path_to_defry="defry/defry.out", image_to_defry="img/appLogo.png"):
     """Images taken from .ipa use a propietary extension by Apple that makes images unusable for other viewers.
     More info here:
     https://iphonedev.wiki/index.php/CgBI_file_format
