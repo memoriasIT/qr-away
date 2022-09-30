@@ -43,10 +43,10 @@ def generate_qr_image(data: str, colors: list = [Color(0, 0, 0, 1), Color(255, 2
     qr.add_data(data)
 
     eyes_back_color = colors[1].rgb
-    eyes_front_color = colors[1].rgb
+    eyes_front_color = colors[0].rgb
 
     body_back_color = colors[1].rgb
-    body_front_color = colors[1].rgb
+    body_front_color = colors[0].rgb
 
     # Generate eyes
     qr_eyes_img = qr.make_image(

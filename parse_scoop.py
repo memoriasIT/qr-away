@@ -19,6 +19,9 @@ class ScoopData:
         self.app_logo_path = downloadAppLogo(soup, output_path=f"{self.app_title}/{self.app_platform.name}")
         self.download_url = getUrlFromButtonWithId("download", soup)
         self.install_url = getUrlFromButtonWithId("install", soup)
+    
+    def __str__(self):
+        return f"{self.app_title} - {self.app_platform}"
 
     
 
