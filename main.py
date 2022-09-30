@@ -53,6 +53,9 @@ def parseArgs():
 
 
 if __name__ == '__main__':
+    # TODO: verbosity level
+    # levels = [logging.WARNING, logging.INFO, logging.DEBUG]
+    # level = levels[min(args.verbose, len(levels) - 1)]  # cap to last level index
     logging.basicConfig(stream=sys.stderr, level=logging.DEBUG)
 
     # TODO: Investigate what's the minimal version
@@ -76,10 +79,10 @@ if __name__ == '__main__':
         # Update path to normalized image
         scoop_data.app_logo_path = scoop_data.app_logo_path[:-4]+"_out.png"
     
-    color_palette = extract_colors.extract_colors(scoop_data.app_logo_path)
+    color_palette = extract_colors.extractColors(scoop_data.app_logo_path)
     
     qr_output_path = f"out/{scoop_data.app_title}/{scoop_data.app_platform.name}/"
-    generate_qr.generate_qr_image(data=scoop_data.download_url, colors=color_palette, output_path=qr_output_path)
+    generate_qr.generateQrImage(data=scoop_data.download_url, colors=color_palette, output_path=qr_output_path)
     
     print(scoop_data)
     print(color_palette)

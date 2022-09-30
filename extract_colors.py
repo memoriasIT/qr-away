@@ -1,6 +1,6 @@
 import colorgram
 
-def extract_colors(inputImage, colors_to_extract: int=4):
+def extractColors(inputImage, colors_to_extract: int=4):
     """Generates a color palette from an image.
 
     Args:
