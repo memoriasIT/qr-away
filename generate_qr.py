@@ -43,10 +43,10 @@ def generateQrImage(data: str, colors: list = [Color(0, 0, 0, 1), Color(255, 255
     qr = qrcode.QRCode(error_correction=errorCorrectionLevel)
     qr.add_data(data)
 
-    eyes_back_color = colors[1].rgb
+    eyes_back_color = colors[2].rgb
     eyes_front_color = colors[0].rgb
 
-    body_back_color = colors[1].rgb
+    body_back_color = colors[2].rgb
     body_front_color = colors[0].rgb
 
     # Generate eyes
@@ -94,4 +94,4 @@ def generateQrImage(data: str, colors: list = [Color(0, 0, 0, 1), Color(255, 255
 
 if __name__ == '__main__':
     colors = [Color(44, 44, 55, 1), Color(244, 44, 55, 1)]
-    generateQrImage(data="lorenzoIsCool.com", colors=colors)
+    generateQrImage(data="https://www.youtube.com/watch?v=dQw4w9WgXcQ", colors=colors)

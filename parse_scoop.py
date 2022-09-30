@@ -1,23 +1,26 @@
 import os
-import logging, sys
+import logging
+import sys
 
 import requests
 from bs4 import BeautifulSoup
 
 from app_platform import AppPlatform
 
+
 class ScoopData:
     def __init__(self, soup: BeautifulSoup):
         self.app_title = getAppTitle(soup)
         self.app_platform = getPlatform(soup)
-        self.app_logo_path = downloadAppLogo(soup, output_path=f"{self.app_title}/{self.app_platform.name}")
+        self.app_logo_path = downloadAppLogo(
+            soup, output_path=f"{self.app_title}/{self.app_platform.name}")
         self.download_url = getUrlFromButtonWithId("download", soup)
         self.install_url = getUrlFromButtonWithId("install", soup)
-    
+        self.app_version = parseAppVersion(soup)
+
     def __str__(self):
         return f"{self.app_title} - {self.app_platform}"
 
-    
 
 def parseHtml(url: str):
     """Parses the HTML of a scoop link to produce a [ScoopData] class, containing all necessary info.
@@ -27,7 +30,7 @@ def parseHtml(url: str):
 
     Returns:
         ScoopData: All the parsed data from the html
-    """    
+    """
     try:
         r = requests.get(url)
         soup = BeautifulSoup(r.text, "html.parser")
@@ -36,7 +39,6 @@ def parseHtml(url: str):
     except:
         logging.debug("Could not parse soup from html.")
         raise
-    
 
 
 def downloadAppLogo(soup: BeautifulSoup, output_path: str = "out/app_icon.png"):
@@ -50,13 +52,13 @@ def downloadAppLogo(soup: BeautifulSoup, output_path: str = "out/app_icon.png"):
     """
     # Make dirs for the app logo
     try:
-        full_output_path = f"img/{output_path}"
+        full_output_path = f"out/{output_path}"
         path_with_file = f"{full_output_path}/app_icon.png"
         path_exist = os.path.exists(full_output_path)
         if not path_exist:
             os.makedirs(full_output_path)
     except:
-        path_with_file = f"img/app_icon.png"
+        path_with_file = f"out/app_icon.png"
 
     # Download image from scoop and save to dir
     try:
@@ -66,10 +68,11 @@ def downloadAppLogo(soup: BeautifulSoup, output_path: str = "out/app_icon.png"):
             f.write(requests.get(appIconUrl).content)
             print(f"Saved app_icon to {full_output_path}/app_icon.png")
     except:
-        logging.debug("Could not save app icon to file, maybe it's non-existant?")
+        logging.debug(
+            "Could not save app icon to file, maybe it's non-existant?")
         logging.debug("Using default app_icon.png")
         path_with_file = f"out/default_app_icon.png"
-    
+
     return path_with_file
 
 
@@ -81,15 +84,27 @@ def getUrlFromButtonWithId(text: str, soup: BeautifulSoup):
         soup (BeautifulSoup): _description_
     Returns:
         Url of the button requested
-    """    
+    """
     button_div = soup.select_one(f'div[id*="{text}-button"]')
     button_url = button_div.find("a").get("href")
 
     if (button_url is None):
-        logging.debug(f"Could not find the button url with id: {text}-button. Returning ''")
+        logging.debug(
+            f"Could not find the button url with id: {text}-button. Returning ''")
         return ""
     else:
         return button_url
+
+
+def parseAppVersion(soup: BeautifulSoup) -> str:
+    table = soup.find('table', attrs={'class': 'app-details-summary-table'})
+    table_body = table.find('tbody')
+    rows = table_body.find_all('tr')
+    for row in rows:
+        cols = row.find_all('td')
+        if cols[0].text == "Version":
+            return cols[1].renderContents().strip().decode("utf-8") 
+    return ""
 
 
 def getAppTitle(soup: BeautifulSoup) -> str:
@@ -100,11 +115,12 @@ def getAppTitle(soup: BeautifulSoup) -> str:
 
     Returns:
         str: App title
-    """    
+    """
     title_div = soup.select_one(selector=f'div[class*="app-title"]')
 
     if (title_div is None):
-        logging.debug(f"Could not find the title div with class: app-title. Returning ''")
+        logging.debug(
+            f"Could not find the title div with class: app-title. Returning ''")
         return ""
     else:
         return title_div.get_text().strip()
@@ -126,4 +142,5 @@ def getPlatform(soup: BeautifulSoup) -> AppPlatform:
 if __name__ == '__main__':
     logging.basicConfig(stream=sys.stderr, level=logging.DEBUG)
     # Demo URL
-    parseHtml(url="https://scoop.pinch.nl/?page=app-detail&hash=e09e1ddb325632953fbc107d3de7741d&version=114")
+    parseHtml(
+        url="https://scoop.pinch.nl/?page=app-detail&hash=5f9a67584b46133bfddc87043cf8cc23&version=103")

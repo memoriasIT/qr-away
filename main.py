@@ -8,6 +8,7 @@ import fix_image
 import parse_scoop
 from parse_scoop import AppPlatform
 import generate_qr
+import generate_card
 
 def parseArgs():
     # Make parser object
@@ -68,12 +69,12 @@ if __name__ == '__main__':
         print('Try $python <script_name> "Hello" 123 --enable [-v {0,1,2}]')
 
     scoop_data = parse_scoop.parseHtml(url="https://scoop.pinch.nl/?page=app-detail&hash=5f9a67584b46133bfddc87043cf8cc23&version=103")
-    scoop_data = parse_scoop.parseHtml(url="https://scoop.pinch.nl/?page=app-detail&hash=37072dacec36a10cd1ae04905a7c0224&version=9")
+    # scoop_data = parse_scoop.parseHtml(url="https://scoop.pinch.nl/?page=app-detail&hash=37072dacec36a10cd1ae04905a7c0224&version=9")
     logging.info(f"Parsed info correctly: {scoop_data}")
 
     # iOS icon data uses some propietary bytes from apple that make it corrupt to other viewers
     # Images must be then normalized. See more info in fix_image.py
-    if (scoop_data.app_platform is AppPlatform.IOS):
+    if scoop_data.app_platform is AppPlatform.IOS:
         fix_image.defryImage(scoop_data.app_logo_path)
         # Update path to normalized image
         scoop_data.app_logo_path = scoop_data.app_logo_path[:-4]+"_out.png"
@@ -82,9 +83,12 @@ if __name__ == '__main__':
     color_palette = extract_colors.extractColors(scoop_data.app_logo_path)
     logging.info(f"Color Scheme obtained: {color_palette}")
     
-    qr_output_path = f"out/{scoop_data.app_title}/{scoop_data.app_platform.name}/"
-    generate_qr.generateQrImage(data=scoop_data.download_url, colors=color_palette, output_path=qr_output_path)
-    logging.info(f"QR image generated at: {qr_output_path}/qr.png")
+    logging.info("Generating QR...")
+    output_path = f"out/{scoop_data.app_title}/{scoop_data.app_platform.name}/"
+    generate_qr.generateQrImage(data=scoop_data.download_url, colors=color_palette, output_path=output_path)
+    logging.info(f"QR image generated at: {output_path}/qr.png")
 
-
+    logging.info("Generating Card...")
+    generate_card.generateCardFromQr(app_name= scoop_data.app_title, app_version=scoop_data.app_version, app_platform=scoop_data.app_platform, qr_path=f"{output_path}/qr.png", output_path=f"{output_path}/card.png")
+    logging.info(f"QR image generated at: {output_path}/card.png")
     
