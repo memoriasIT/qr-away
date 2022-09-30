@@ -2,6 +2,7 @@
 import argparse
 import logging
 import sys
+import urllib.parse
 
 import extract_colors
 import fix_image
@@ -18,19 +19,20 @@ def parseArgs():
     )
 
     argParser.add_argument(
-        "required_positional_arg",
-        help="desc",
+        "URL",
+        help="URL from Scoop to parse",
     )
-    argParser.add_argument(
-        "required_int",
-        type=int,
-        help="req number",
-    )
-    argParser.add_argument(
-        "--on",
-        action="store_true",
-        help="include to enable",
-    )
+
+    # argParser.add_argument(
+    #     "required_int",
+    #     type=int,
+    #     help="req number",
+    # )
+    # argParser.add_argument(
+    #     "--on",
+    #     action="store_true",
+    #     help="include to enable",
+    # )
     argParser.add_argument(
         "-v",
         "--verbosity",
@@ -38,16 +40,6 @@ def parseArgs():
         choices=[0, 1, 2],
         default=1,
         help="increase or decrease output verbosity (default: %(default)s)",
-    )
-
-    group1 = argParser.add_mutually_exclusive_group(required=True)
-    group1.add_argument(
-        '--enable',
-        action="store_true",
-    )
-    group1.add_argument(
-        '--disable',
-        action="store_false",
     )
 
     return (argParser.parse_args())
@@ -66,10 +58,13 @@ if __name__ == '__main__':
         level = verbosity_levels[min(args.verbosity, len(verbosity_levels) - 1)]  # cap to last level index
         logging.basicConfig(stream=sys.stderr, level=level)
     except:
-        print('Try $python <script_name> "Hello" 123 --enable [-v {0,1,2}]')
+        print('Try $python <script_name> "URL" [-v {0,1,2}]')
+        exit()
 
-    scoop_data = parse_scoop.parseHtml(url="https://scoop.pinch.nl/?page=app-detail&hash=5f9a67584b46133bfddc87043cf8cc23&version=103")
+    # scoop_data = parse_scoop.parseHtml(url="https://scoop.pinch.nl/?page=app-detail&hash=5f9a67584b46133bfddc87043cf8cc23&version=103")
     # scoop_data = parse_scoop.parseHtml(url="https://scoop.pinch.nl/?page=app-detail&hash=37072dacec36a10cd1ae04905a7c0224&version=9")
+    urlToParse = urllib.parse.unquote(args.URL).replace('\\', '')
+    scoop_data = parse_scoop.parseHtml(url=urlToParse)
     logging.info(f"Parsed info correctly: {scoop_data}")
 
     # iOS icon data uses some propietary bytes from apple that make it corrupt to other viewers
