@@ -61,8 +61,6 @@ if __name__ == '__main__':
         print('Try $python <script_name> "URL" [-v {0,1,2}]')
         exit()
 
-    # scoop_data = parse_scoop.parseHtml(url="https://scoop.pinch.nl/?page=app-detail&hash=5f9a67584b46133bfddc87043cf8cc23&version=103")
-    # scoop_data = parse_scoop.parseHtml(url="https://scoop.pinch.nl/?page=app-detail&hash=37072dacec36a10cd1ae04905a7c0224&version=9")
     urlToParse = urllib.parse.unquote(args.URL).replace('\\', '')
     scoop_data = parse_scoop.parseHtml(url=urlToParse)
     logging.info(f"Parsed info correctly: {scoop_data}")
