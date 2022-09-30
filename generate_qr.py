@@ -1,12 +1,13 @@
-from PIL import Image, ImageDraw, ImageFile
-from PIL.PngImagePlugin import PngInfo
+import os
+import logging
 
 import qrcode
-from qrcode.image.styledpil import StyledPilImage
-from qrcode.image.styles.moduledrawers import RoundedModuleDrawer
-from qrcode.image.styles.colormasks import SolidFillColorMask
-
 from colorgram import Color
+from PIL import Image, ImageDraw
+from qrcode.image.styledpil import StyledPilImage
+from qrcode.image.styles.colormasks import SolidFillColorMask
+from qrcode.image.styles.moduledrawers import RoundedModuleDrawer
+
 
 def generate_eyes_mask(img):
     """Custom QR eyes are not supported in the qrcode package, so this method is used
@@ -79,7 +80,17 @@ def generate_qr_image(data: str, colors: list = [Color(0, 0, 0, 1), Color(255, 2
     mask = generate_eyes_mask(qr_img)
     final_img = Image.composite(qr_eyes_img, qr_img, mask)
 
-    final_img.save(output_path)
+    try:
+        print(output_path)
+        exists_output_path = os.path.exists(output_path)
+        if not exists_output_path:
+            os.makedirs(output_path)
+    except:
+        output_path = "out"
+        logging.debug(f"Could not create folders, saving it to {output_path}")
+        
+
+    final_img.save(f"{output_path}/qr.png")
 
 
 if __name__ == '__main__':

@@ -77,7 +77,9 @@ if __name__ == '__main__':
         scoop_data.app_logo_path = scoop_data.app_logo_path[:-4]+"_out.png"
     
     color_palette = extract_colors.extract_colors(scoop_data.app_logo_path)
-    generate_qr.generate_qr_image(data=scoop_data.download_url, colors=color_palette)
+    
+    qr_output_path = f"out/{scoop_data.app_title}/{scoop_data.app_platform.name}/"
+    generate_qr.generate_qr_image(data=scoop_data.download_url, colors=color_palette, output_path=qr_output_path)
     
     print(scoop_data)
     print(color_palette)
