@@ -29,7 +29,7 @@ def generate_eyes_mask(img):
     draw.rectangle((40, img_size-110, 110, img_size-40), fill=255)
     return mask
 
-def generateQrImage(data: str, colors: list = [Color(0, 0, 0, 1), Color(255, 255, 255, 1)], errorCorrectionLevel=qrcode.constants.ERROR_CORRECT_H, embedded_image="pinchLogo.png", output_path="out/qr_output.png"):
+def generateQrImage(data: str, colors: list = [Color(0, 0, 0, 1), Color(255, 255, 255, 1)], errorCorrectionLevel=qrcode.constants.ERROR_CORRECT_H, embedded_image="res/pinchLogo.png", output_path="out/qr_output.png"):
     """Generate QR image
 
     Args:
@@ -81,7 +81,6 @@ def generateQrImage(data: str, colors: list = [Color(0, 0, 0, 1), Color(255, 255
     final_img = Image.composite(qr_eyes_img, qr_img, mask)
 
     try:
-        print(output_path)
         exists_output_path = os.path.exists(output_path)
         if not exists_output_path:
             os.makedirs(output_path)

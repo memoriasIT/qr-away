@@ -1,16 +1,10 @@
 import os
-from enum import Enum
 import logging, sys
 
 import requests
 from bs4 import BeautifulSoup
 
-
-class AppPlatform(Enum):
-    ANDROID = 1
-    IOS = 2
-    UNKNOWN = 3
-
+from app_platform import AppPlatform
 
 class ScoopData:
     def __init__(self, soup: BeautifulSoup):
@@ -45,7 +39,7 @@ def parseHtml(url: str):
     
 
 
-def downloadAppLogo(soup: BeautifulSoup, output_path: str = "img/app_icon.png"):
+def downloadAppLogo(soup: BeautifulSoup, output_path: str = "out/app_icon.png"):
     """Downloads the app icon to the img folder
 
     Args:
@@ -74,7 +68,7 @@ def downloadAppLogo(soup: BeautifulSoup, output_path: str = "img/app_icon.png"):
     except:
         logging.debug("Could not save app icon to file, maybe it's non-existant?")
         logging.debug("Using default app_icon.png")
-        path_with_file = f"img/default_app_icon.png"
+        path_with_file = f"out/default_app_icon.png"
     
     return path_with_file
 
