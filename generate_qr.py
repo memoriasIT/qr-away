@@ -1,97 +1,162 @@
 import os
-import logging
-
 import qrcode
-from colorgram import Color
 from PIL import Image, ImageDraw
 from qrcode.image.styledpil import StyledPilImage
 from qrcode.image.styles.colormasks import SolidFillColorMask
-from qrcode.image.styles.moduledrawers import RoundedModuleDrawer
+from qrcode.image.styles.moduledrawers import RoundedModuleDrawer, SquareModuleDrawer
 
+# Helper class to match your usage pattern if you don't have one defined
+class Color:
+    def __init__(self, r, g, b):
+        self.rgb = (r, g, b)
 
-def generate_eyes_mask(img):
-    """Custom QR eyes are not supported in the qrcode package, so this method is used
-    to generate a mask used for creating custom QR eyes.
-
-    Args:
-        img (Image): QR to mask and get the eyes from
-
-    Returns:
-        Image: mask to use for the eyes of the QR
+def generate_eyes_mask(img, qr_version, box_size, border):
     """
-    img_size = img.size[0]
-    eye_size = 70  # default
-    quiet_zone = 40  # default
-    mask = Image.new('L', img.size, 0)
+    Dynamically generates a mask for the QR eyes (finder patterns).
+    Standard QR eyes are always 7x7 modules.
+    """
+    width, height = img.size
+    mask = Image.new('L', (width, height), 0)
     draw = ImageDraw.Draw(mask)
-    draw.rectangle((40, 40, 110, 110), fill=255)
-    draw.rectangle((img_size-110, 40, img_size-40, 110), fill=255)
-    draw.rectangle((40, img_size-110, 110, img_size-40), fill=255)
+
+    # Calculate pixel metrics
+    eye_module_count = 7
+    eye_size_px = eye_module_count * box_size
+    border_px = border * box_size
+
+    # Top Left Eye
+    draw.rectangle(
+        (border_px, border_px, border_px + eye_size_px, border_px + eye_size_px), 
+        fill=255
+    )
+
+    # Top Right Eye
+    tr_x = width - border_px - eye_size_px
+    draw.rectangle(
+        (tr_x, border_px, tr_x + eye_size_px, border_px + eye_size_px), 
+        fill=255
+    )
+
+    # Bottom Left Eye
+    bl_y = height - border_px - eye_size_px
+    draw.rectangle(
+        (border_px, bl_y, border_px + eye_size_px, bl_y + eye_size_px), 
+        fill=255
+    )
+
     return mask
 
-def generateQrImage(data: str, colors: list = [Color(0, 0, 0, 1), Color(255, 255, 255, 1)], errorCorrectionLevel=qrcode.constants.ERROR_CORRECT_H, embedded_image="res/pinchLogo.png", output_path="out/qr_output.png"):
-    """Generate QR image
-
-    Args:
-        data (str): data to put in the QR
-        colors (list): array of colors to use, if no colors are set, black and white are used
-        errorCorrectionLevel (_type_, optional): _description_. Defaults to qrcode.constants.ERROR_CORRECT_H.
-        embedded_image (str, optional): _description_. Defaults to "pinchLogo.png".
-        output_path (str, optional): _description_. Defaults to "qr_output.png".
+def generateQrImage(
+    data: str, 
+    colors: list, 
+    target_size: tuple = (500, 500),
+    errorCorrectionLevel=qrcode.constants.ERROR_CORRECT_H, 
+    embedded_image="res/pinchLogo.png", 
+    output_path="out"
+):
     """
-
-    qr = qrcode.QRCode(error_correction=errorCorrectionLevel)
+    Generate a styled QR image at high quality without resizing/stretching.
+    """
+    
+    # 1. Setup QR Data (First Pass)
+    # We initialize with a dummy box_size to calculate the matrix dimensions
+    qr = qrcode.QRCode(
+        version=None, 
+        error_correction=errorCorrectionLevel,
+        box_size=1, 
+        border=4
+    )
     qr.add_data(data)
+    qr.make(fit=True)
 
-    eyes_back_color = colors[2].rgb
-    eyes_front_color = colors[0].rgb
+    # 2. Calculate Dynamic Box Size
+    # We need to find the integer box_size that fits closest to target_size
+    # Formula: Total Pixels = (Modules + 2*Border) * BoxSize
+    matrix_size = qr.modules_count
+    total_modules = matrix_size + (qr.border * 2)
+    
+    # Calculate how many pixels per module we can afford
+    suggested_box_size = target_size[0] // total_modules
+    
+    # Ensure we don't go below 1 pixel per module
+    if suggested_box_size < 1:
+        suggested_box_size = 1
+        
+    # Update the QR object with the high-res box size
+    qr.box_size = suggested_box_size
+    
+    print(f"Calculated Box Size: {qr.box_size}px (Total modules: {total_modules})")
 
-    body_back_color = colors[2].rgb
-    body_front_color = colors[0].rgb
+    # 3. Parse Colors
+    body_front = colors[0].rgb
+    bg_color = colors[1].rgb if len(colors) > 1 else (255, 255, 255)
+    eyes_front = colors[2].rgb if len(colors) > 2 else body_front
 
-    # Generate eyes
+    # 4. Generate Image for the EYES (Square)
     qr_eyes_img = qr.make_image(
         image_factory=StyledPilImage,
-        eye_drawer=RoundedModuleDrawer(radius_ratio=1.2),
+        module_drawer=SquareModuleDrawer(),
         color_mask=SolidFillColorMask(
-            back_color=eyes_back_color,
-            front_color=eyes_front_color,
+            back_color=bg_color,
+            front_color=eyes_front,
         ),
     )
 
-    # TODO: Possible upgrade? Replace pinch "P" bg color to the one used as front color
-    # For now abandoned because it needs to transform svg to png and it does not behave well
-    # from cairosvg import svg2png
-    # if (embedded_image == "pinchLogo.svg"):
-    #   #00AB52
-
-    # Main QR body
-    qr_img = qr.make_image(
+    # 5. Generate Image for the BODY (Rounded)
+    embed_arg = embedded_image if os.path.exists(embedded_image) else None
+    
+    qr_body_img = qr.make_image(
         image_factory=StyledPilImage,
         module_drawer=RoundedModuleDrawer(),
         color_mask=SolidFillColorMask(
-            back_color=body_back_color,
-            front_color=body_front_color,
+            back_color=bg_color,
+            front_color=body_front,
         ),
-        embeded_image_path=embedded_image,
+        embeded_image_path=embed_arg
     )
 
-    # Composite QR with eyes
-    mask = generate_eyes_mask(qr_img)
-    final_img = Image.composite(qr_eyes_img, qr_img, mask)
+    # 6. Composite Images using Mask
+    mask = generate_eyes_mask(qr_body_img, qr.version, qr.box_size, qr.border)
+    
+    qr_eyes_img = qr_eyes_img.convert("RGBA")
+    qr_body_img = qr_body_img.convert("RGBA")
+    
+    final_img = Image.composite(qr_eyes_img, qr_body_img, mask)
 
-    try:
-        exists_output_path = os.path.exists(output_path)
-        if not exists_output_path:
-            os.makedirs(output_path)
-    except:
-        output_path = "out"
-        logging.debug(f"Could not create folders, saving it to {output_path}")
+    # 7. Final Fit (Padding instead of Resizing)
+    # Since box_size must be an integer, the generated QR might be slightly 
+    # smaller than target_size (e.g. 790px vs 800px).
+    # We paste it onto a background canvas to match target_size exactly without blur.
+    
+    if final_img.size != target_size:
+        print(f"Native QR size is {final_img.size}. Centering on {target_size} canvas.")
+        bg_canvas = Image.new("RGBA", target_size, bg_color)
         
+        # Calculate center position
+        offset_x = (target_size[0] - final_img.size[0]) // 2
+        offset_y = (target_size[1] - final_img.size[1]) // 2
+        
+        bg_canvas.paste(final_img, (offset_x, offset_y), final_img)
+        final_img = bg_canvas
 
-    final_img.save(f"{output_path}/qr.png")
-
+    # 8. Save File
+    if not os.path.exists(output_path):
+        os.makedirs(output_path)
+        
+    save_loc = os.path.join(output_path, "qr_output.png")
+    final_img.save(save_loc)
+    print(f"High Quality QR Code saved to: {save_loc}")
 
 if __name__ == '__main__':
-    colors = [Color(44, 44, 55, 1), Color(244, 44, 55, 1)]
-    generateQrImage(data="https://www.youtube.com/watch?v=dQw4w9WgXcQ", colors=colors)
+    # Example Usage
+    my_colors = [
+        Color(44, 44, 55),    # Dark Grey (Body)
+        Color(255, 255, 255), # White (Background)
+        Color(244, 44, 55)    # Red (Eyes)
+    ]
+    
+    generateQrImage(
+        data="https://www.youtube.com/watch?v=dQw4w9WgXcQ", 
+        colors=my_colors,
+        target_size=(1000, 1000) # Output will be exactly 1000x1000 px, high quality
+    )
