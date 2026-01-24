@@ -1,7 +1,5 @@
-# QR Away 🚀
-
 <div align="center">
-  <img src="flutter_app/assets/qraway.svg" alt="QR Away Logo" width="200"/>
+  <img src="flutter_app/assets/qraway.svg" alt="QR Away Logo" width="400"/>
   <p align="center">
     <strong>Create beautiful, branded QR codes for your applications with ease.</strong>
   </p>
