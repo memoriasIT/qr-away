@@ -19,7 +19,7 @@ class MyApp extends StatelessWidget {
         title: 'QR Away',
         debugShowCheckedModeBanner: false,
         theme: ThemeData(
-          colorScheme: ColorScheme.fromSeed(seedColor: Colors.deepPurple),
+          colorScheme: ColorScheme.fromSeed(seedColor: Color(0xFF049cef)),
           useMaterial3: true,
           textTheme: GoogleFonts.outfitTextTheme(),
         ),

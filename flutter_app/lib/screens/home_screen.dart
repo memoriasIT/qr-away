@@ -12,6 +12,7 @@ import 'dart:typed_data';
 import 'dart:ui' as ui;
 import 'package:flutter/rendering.dart';
 import 'package:universal_html/html.dart' as html;
+import 'package:flutter_svg/flutter_svg.dart';
 import 'package:qr_flutter/qr_flutter.dart';
 
 class HomeScreen extends StatefulWidget {
@@ -28,7 +29,16 @@ class _HomeScreenState extends State<HomeScreen> {
   Widget build(BuildContext context) {
     return Scaffold(
       appBar: AppBar(
-        title: const Text('QR Generator'),
+        title: Row(
+          crossAxisAlignment: CrossAxisAlignment.end,
+          children: [
+            SvgPicture.asset('assets/qraway.svg', height: 50),
+            Padding(
+              padding: const EdgeInsets.only(bottom: 8.0, left: 8),
+              child: const Text('by MemoriasIT', style: TextStyle(fontSize: 10, color: Colors.black54)),
+            ),
+          ],
+        ),
         backgroundColor: Theme.of(context).colorScheme.inversePrimary,
         actions: [IconButton(icon: const Icon(Icons.download), onPressed: _captureAndSavePng, tooltip: 'Download Png')],
       ),
@@ -181,7 +191,7 @@ class _HomeScreenState extends State<HomeScreen> {
         const SizedBox(height: 16),
         DropdownButtonFormField<int>(
           decoration: const InputDecoration(labelText: 'Error Correction Level', border: OutlineInputBorder()),
-          value: state.style.errorCorrectionLevel,
+          initialValue: state.style.errorCorrectionLevel,
           items: const [
             DropdownMenuItem(value: QrErrorCorrectLevel.L, child: Text('Low')),
             DropdownMenuItem(value: QrErrorCorrectLevel.M, child: Text('Medium')),
@@ -197,7 +207,7 @@ class _HomeScreenState extends State<HomeScreen> {
         const SizedBox(height: 16),
         DropdownButtonFormField<QrDataModuleShape>(
           decoration: const InputDecoration(labelText: 'Data Module Shape', border: OutlineInputBorder()),
-          value: state.style.dataModuleShape,
+          initialValue: state.style.dataModuleShape,
           items: const [
             DropdownMenuItem(value: QrDataModuleShape.square, child: Text('Square')),
             DropdownMenuItem(value: QrDataModuleShape.circle, child: Text('Circle')),
@@ -211,7 +221,7 @@ class _HomeScreenState extends State<HomeScreen> {
         const SizedBox(height: 16),
         DropdownButtonFormField<QrEyeShape>(
           decoration: const InputDecoration(labelText: 'Eye Shape', border: OutlineInputBorder()),
-          value: state.style.eyeShape,
+          initialValue: state.style.eyeShape,
           items: const [
             DropdownMenuItem(value: QrEyeShape.square, child: Text('Square')),
             DropdownMenuItem(value: QrEyeShape.circle, child: Text('Circle')),
@@ -317,7 +327,7 @@ class _HomeScreenState extends State<HomeScreen> {
               ),
             ),
           );
-        }).toList(),
+        }),
       ],
     );
   }
@@ -415,8 +425,10 @@ class _HomeScreenState extends State<HomeScreen> {
         ..click();
       html.Url.revokeObjectUrl(url);
     } catch (e) {
-      print(e);
-      ScaffoldMessenger.of(context).showSnackBar(const SnackBar(content: Text('Failed to download image')));
+      debugPrint(e.toString());
+      if (mounted) {
+        ScaffoldMessenger.of(context).showSnackBar(const SnackBar(content: Text('Failed to download image')));
+      }
     }
   }
 }
